@@ -11,10 +11,27 @@ voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[1].id) #0 = male voice, 1 = female voice
 activationWord = 'computer'
 
+#configuring chrome as the default browser
+chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+webbrowser.register('chrome', None, webbrowser.BackgroundBrowser(chrome_path))
+
 def speak(text, rate = 120):
     engine.setProperty('rate', rate)
     engine.say(text)
     engine.runAndWait()
+
+def search_wikipedia(query = ""):
+    search_result = wikipedia.search(query)
+    if not search_result:
+        print("No wikipedia result")
+        return "No result received" 
+    try:
+        wikiPage = wikipedia.page(search_result[0])
+    except wikipedia.DisambiguationError as err:
+        wikiPage = wikipedia.page(err.options[0])
+    print(wikiPage.title)
+    wikiSummary = str(wikiPage.summary)
+    return wikiSummary
 
 def parseCommand():
     listener = sr.Recognizer()
@@ -58,3 +75,15 @@ if __name__ == '__main__':
                         query.pop(0)  # remove say
                         speech = ' '.join(query)
                         speak(speech)
+
+                # navigation to web commands
+                if query and query[0] == 'go' and query[1] == 'to':
+                    speak("Opening...")
+                    query = ' '.join(query[2:])
+                    webbrowser.get('chrome').open_new(query)
+
+                # wikipedia commands
+                if query and query[0] == 'wikipedia':
+                    query = ' '.join(query[1:])
+                    speak("Querying wikipedia")
+                    speak(search_wikipedia(query))
